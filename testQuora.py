@@ -3,6 +3,7 @@ from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.common.by import By
 import pandas as pd
 import time
+from bs4 import BeautifulSoup as bs
 
 class QuoraScraper:
     def __init__(self):
@@ -14,9 +15,10 @@ class QuoraScraper:
         }
         self.questions = []
         self.answers = []
+        self.links = []
     
     def start_driver(self):
-        self.driver = webdriver.Chrome(executable_path='H:\DOWNLOADS\chromedriver.exe')
+        self.driver = webdriver.Chrome('H:\DOWNLOADS\chromedriver.exe')
 
     def close_driver(self):
         self.driver.close()
@@ -50,13 +52,37 @@ class QuoraScraper:
             self.driver.execute_script("window.scrollTo(0, "+str(y)+")")
             y += 1000  
             time.sleep(1)
- 
+    
+    def qa(self):
+        html = self.driver.page_source
+        soup = bs(html,'html.parser')
+
+        a = soup.find_all('span',attrs={"class":"q-box qu-userSelect--text"})
+        for i in a:
+            self.questions.append(i.text)
+
+
+        data = soup.findAll('span',attrs={'class':'q-text qu-dynamicFontSize--regular qu-color--blue_dark qu-bold'})
+        for div in data:
+            lin = div.findAll('a')
+            for a in lin:
+                self.links.append(a.get('href'))
+        
+        a = soup.find_all('span',attrs={"class":"q-text qu-truncateLines--3 qu-wordBreak--break-word qt_truncated_inline"})
+        for i in a:
+            self.answers.append(i.text)
+
+        # print(len(self.questions),len(self.answers),len(self.links))
+        
+
 if __name__ == "__main__":
     scraper = QuoraScraper()
     scraper.start_driver()
-    username = "mpawanesh2@gmail.com"
-    password = "Pawanesh@8614"
+    username = "USERNAME"
+    password = "PASSWORD"
     # scraper.set_credentials(username, password)
     # scraper.login()
     keyword = "Python"
     scraper.open_new(keyword)
+    scraper.qa()
+    scraper.close_driver()
